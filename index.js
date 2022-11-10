@@ -11,10 +11,6 @@ app.use(cors());
 app.use(express.json());
 
 
-// user-name:goshipUser
-//password:8ucWtMZgatI7E1Lo
-// console.log(process.env.DB_USER);
-// console.log(process.env.DB_PASSWORD)
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.memgfjc.mongodb.net/?retryWrites=true&w=majority`;
@@ -52,6 +48,21 @@ async function run(){
         });
 
     // review api
+        app.get('/reviews', async (req, res) => {
+
+
+            let query = {};
+            if (req.query.email) {
+                query = {
+                    email: req.query.email
+                }
+            }
+            const cursor = reviewCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
+        });
+
+
     app.post('/reviews',async(req, res)=>{
         const review =req.body;
         const result = await reviewCollection.insertOne(review);
@@ -70,18 +81,27 @@ async function run(){
         const reviews = await cursor.toArray();
         res.send(reviews);
     });
-    app.get('/reviews',async(req,res) =>{
-        console.log(req.query.email)
-        let query ={};
-        if (req.query.email){
-            query = {
-            email: req.query.email
+    app.delete('/reviews/:id',  async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await reviewCollection.deleteOne(query);
+            res.send(result);
+      });
+        app.patch('/reviews/:id',  async (req, res) => {
+            const id = req.params.id;
+            const status = req.body.status
+            const query = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    status: status
+                }
             }
-        }
-        const cursor = reviewCollection.find(query);
-        const reviews = await cursor.toArray();
-        res.send(reviews);
-    })
+            const result = await reviewCollection.updateOne(query, updatedDoc);
+            res.send(result);
+        })
+    
+        
+    
 
         
     }
